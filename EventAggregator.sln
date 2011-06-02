@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventAggregator", "EventAggregator\EventAggregator.csproj", "{5DE30455-5DB4-418B-B655-5D903DF6966A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventAggregator.Tests", "EventAggregator.Tests\EventAggregator.Tests.csproj", "{D5986171-B6DD-4FC1-97D6-33709AEDAE20}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5DE30455-5DB4-418B-B655-5D903DF6966A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5DE30455-5DB4-418B-B655-5D903DF6966A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5DE30455-5DB4-418B-B655-5D903DF6966A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5DE30455-5DB4-418B-B655-5D903DF6966A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D5986171-B6DD-4FC1-97D6-33709AEDAE20}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D5986171-B6DD-4FC1-97D6-33709AEDAE20}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D5986171-B6DD-4FC1-97D6-33709AEDAE20}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D5986171-B6DD-4FC1-97D6-33709AEDAE20}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
