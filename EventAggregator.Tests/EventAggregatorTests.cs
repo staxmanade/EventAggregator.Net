@@ -12,7 +12,8 @@ namespace EventAggregator.Tests
 		public void Should_send_message()
 		{
 			var someMessageHandler = new SomeMessageHandler();
-			var eventAggregator = new EventAggregator();
+			var eventAggregator = new EventAggregationManager();
+
 			eventAggregator.AddListener(someMessageHandler);
 			eventAggregator.SendMessage<SomeMessage>();
 			someMessageHandler.EventsTrapped.Count().ShouldEqual(1);
@@ -21,7 +22,7 @@ namespace EventAggregator.Tests
 		[Fact]
 		public void When_a_listener_has_been_garbage_collected_the_handler_should_be_removed()
 		{
-			var eventAggregator = new EventAggregator();
+			var eventAggregator = new EventAggregationManager();
 
 			AddHandlerInScopeThatWillRemoveInstanceWhenGarbageCollected(eventAggregator);
 			GC.Collect();
@@ -41,7 +42,7 @@ namespace EventAggregator.Tests
 		public void Can_unsubscribe_manually()
 		{
 			var someMessageHandler = new SomeMessageHandler();
-			var eventAggregator = new EventAggregator();
+			var eventAggregator = new EventAggregationManager();
 			eventAggregator.AddListener(someMessageHandler);
 			eventAggregator.SendMessage<SomeMessage>();
 			someMessageHandler.EventsTrapped.Count().ShouldEqual(1);
@@ -52,6 +53,22 @@ namespace EventAggregator.Tests
 
 			someMessageHandler.EventsTrapped.Count().ShouldEqual(1);
 		}
+
+
+		[Fact]
+		public void When_no_subscribers_can_detect_nothing_was_published()
+		{
+			var config = new EventAggregationManager.Config();
+			bool warningWasCalled = false;
+			config.OnMessageNotPublishedBecauseZeroListeners = msg => { warningWasCalled = true; };
+			var eventAggregator = new EventAggregationManager(config);
+
+			eventAggregator.SendMessage<SomeMessage>();
+
+
+			warningWasCalled.ShouldBeTrue();
+		}
+
 	}
 
 

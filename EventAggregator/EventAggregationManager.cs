@@ -19,6 +19,7 @@ namespace EventAggregator
 	/// <summary>
 	/// Marker interface - TODO: find way to remove
 	/// </summary>
+	[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1040:AvoidEmptyInterfaces")]
 	public interface IListener { }
 
 	/// <summary>
@@ -50,30 +51,36 @@ namespace EventAggregator
 	public interface IEventPublisher
 	{
 		void SendMessage<TMessage>(TMessage message, Action<Action> marshal = null);
-		void SendMessage<TMessage>(Action<Action> marshal = null) where TMessage : new();
+		void SendMessage<TMessage>(Action<Action> marshal = null)
+			where TMessage : new();
 	}
 
 	public interface IEventAggregator : IEventPublisher, IEventSubscriptionManager { }
-	public class EventAggregator : IEventPublisher, IEventSubscriptionManager
+	public class EventAggregationManager : IEventPublisher, IEventSubscriptionManager
 	{
 		private readonly ListenerWrapperCollection _listeners = new ListenerWrapperCollection();
-		private readonly object _sync = new object();
 		private readonly Config _config;
 
-		public EventAggregator()
+		public EventAggregationManager()
 			: this(new Config())
 		{
 		}
 
-		public EventAggregator(Config config)
+		public EventAggregationManager(Config config)
 		{
 			_config = config;
 		}
 
+		/// <summary>
+		/// This will send the message to each IListener that is subscribing to TMessage.
+		/// </summary>
+		/// <typeparam name="TMessage">The type of message being sent</typeparam>
+		/// <param name="message">The message instance</param>
+		/// <param name="marshal">You can optionally override how the message publication action is marshalled</param>
 		public void SendMessage<TMessage>(TMessage message, Action<Action> marshal = null)
 		{
 			if (marshal == null)
-				marshal = _config.ThreadMarshaller;
+				marshal = _config.ThreadMarshaler;
 
 			var wasAnyMessageHandled = Call<IListener<TMessage>>(message, marshal);
 
@@ -81,7 +88,14 @@ namespace EventAggregator
 				return;
 		}
 
-		public void SendMessage<TMessage>(Action<Action> marshal = null) where TMessage : new()
+		/// <summary>
+		/// This will create a new default instance of TMessage and send the message to each IListener that is subscribing to TMessage.
+		/// </summary>
+		/// <typeparam name="TMessage">The type of message being sent</typeparam>
+		/// <param name="marshal">You can optionally override how the message publication action is marshalled</param>
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1004:GenericMethodsShouldProvideTypeParameter")]
+		public void SendMessage<TMessage>(Action<Action> marshal = null)
+			where TMessage : new()
 		{
 			SendMessage(new TMessage(), marshal);
 		}
@@ -108,10 +122,11 @@ namespace EventAggregator
 
 			if (!wasAnyListenerCalled)
 			{
-				_config.OnMessagePublishedWithZeroListeners(message);
+				_config.OnMessageNotPublishedBecauseZeroListeners(message);
 			}
 			return wasAnyListenerCalled;
 		}
+
 
 		public IEventSubscriptionManager AddListener(object listener)
 		{
@@ -122,14 +137,16 @@ namespace EventAggregator
 
 		public IEventSubscriptionManager RemoveListener(object listener)
 		{
-			lock (_sync)
-			{
-				_listeners.RemoveListener(listener);
-			}
+			_listeners.RemoveListener(listener);
 			return this;
 		}
 
 
+		/// <summary>
+		/// Wrapper collection of ListenerWrappers to manage things like 
+		/// threadsafe manipulation to the collection, and convenience 
+		/// methods to configure the collection
+		/// </summary>
 		class ListenerWrapperCollection : IEnumerable<ListenerWrapper>
 		{
 			private readonly List<ListenerWrapper> _listeners = new List<ListenerWrapper>();
@@ -137,31 +154,22 @@ namespace EventAggregator
 
 			public void RemoveListener(object listener)
 			{
+				ListenerWrapper listenerWrapper;
 				lock (_sync)
-				{
-					ListenerWrapper listenerWrapper;
 					if (TryGetListenerWrapperByListener(listener, out listenerWrapper))
-					{
 						_listeners.Remove(listenerWrapper);
-					}
-				}
 			}
 
 			private void RemoveListenerWrapper(ListenerWrapper listenerWrapper)
 			{
 				lock (_sync)
-				{
 					_listeners.Remove(listenerWrapper);
-				}
 			}
-
 
 			public IEnumerator<ListenerWrapper> GetEnumerator()
 			{
 				lock (_sync)
-				{
 					return _listeners.ToList().GetEnumerator();
-				}
 			}
 
 			IEnumerator IEnumerable.GetEnumerator()
@@ -169,32 +177,30 @@ namespace EventAggregator
 				return GetEnumerator();
 			}
 
-
 			private bool ContainsListener(object listener)
 			{
 				ListenerWrapper listenerWrapper;
-				if (TryGetListenerWrapperByListener(listener, out listenerWrapper))
-				{
-					return true;
-				}
-				return false;
+				return TryGetListenerWrapperByListener(listener, out listenerWrapper);
 			}
 
 			private bool TryGetListenerWrapperByListener(object listener, out ListenerWrapper listenerWrapper)
 			{
 				lock (_sync)
-				{
 					listenerWrapper = _listeners.SingleOrDefault(x => x.ListenerInstance == listener);
-				}
 
 				return listenerWrapper != null;
 			}
 
 			public void AddListener(object listener)
 			{
-				if (!ContainsListener(listener))
+				lock (_sync)
 				{
+
+					if (ContainsListener(listener))
+						return;
+
 					var listenerWrapper = new ListenerWrapper(listener, RemoveListenerWrapper);
+
 					_listeners.Add(listenerWrapper);
 				}
 			}
@@ -259,10 +265,13 @@ namespace EventAggregator
 		}
 
 
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1034:NestedTypesShouldNotBeVisible")]
 		public class Config
 		{
-			public Action<object> OnMessagePublishedWithZeroListeners = msg => { /* TODO: possibly Trace message?*/ };
-			public Action<Action> ThreadMarshaller = action => action();
+			[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1051:DoNotDeclareVisibleInstanceFields")]
+			public Action<object> OnMessageNotPublishedBecauseZeroListeners = msg => { /* TODO: possibly Trace message?*/ };
+			[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1051:DoNotDeclareVisibleInstanceFields")]
+			public Action<Action> ThreadMarshaler = action => action();
 		}
 	}
 }
