@@ -19,7 +19,6 @@ namespace EventAggregator
 	/// <summary>
 	/// Marker interface - TODO: find way to remove
 	/// </summary>
-	[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1040:AvoidEmptyInterfaces")]
 	public interface IListener { }
 
 	/// <summary>
@@ -93,7 +92,6 @@ namespace EventAggregator
 		/// </summary>
 		/// <typeparam name="TMessage">The type of message being sent</typeparam>
 		/// <param name="marshal">You can optionally override how the message publication action is marshalled</param>
-		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1004:GenericMethodsShouldProvideTypeParameter")]
 		public void SendMessage<TMessage>(Action<Action> marshal = null)
 			where TMessage : new()
 		{
@@ -265,12 +263,9 @@ namespace EventAggregator
 		}
 
 
-		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1034:NestedTypesShouldNotBeVisible")]
 		public class Config
 		{
-			[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1051:DoNotDeclareVisibleInstanceFields")]
 			public Action<object> OnMessageNotPublishedBecauseZeroListeners = msg => { /* TODO: possibly Trace message?*/ };
-			[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1051:DoNotDeclareVisibleInstanceFields")]
 			public Action<Action> ThreadMarshaler = action => action();
 		}
 	}
