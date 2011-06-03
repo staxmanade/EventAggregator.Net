@@ -1,12 +1,10 @@
+
 #OS junk files
 [Tt]humbs.db
 *.DS_Store
 
 #Visual Studio files
 *.[Oo]bj
-*.exe
-*.xap
-*.pdb
 *.user
 *.aps
 *.pch
@@ -30,7 +28,6 @@ obj/
 [Bb]in
 [Dd]ebug*/
 [Rr]elease*/
-Ankh.NoLoad
 
 #Tooling
 _ReSharper*/
@@ -65,5 +62,8 @@ Temp/
 *.orig
 
 
-EventAggregator.*.nupkg
+#
+# CUSTOM PROJECT IGNORE
+#
+
 NuGetBuild
