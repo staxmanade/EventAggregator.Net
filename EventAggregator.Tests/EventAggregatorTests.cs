@@ -4,7 +4,7 @@ using System.Linq;
 using System.Reflection;
 using Xunit;
 
-namespace EventAggregator.Tests
+namespace EventAggregator.Net.Tests
 {
 	public class EventAggregatorTests
 	{
@@ -68,7 +68,6 @@ namespace EventAggregator.Tests
 
 			warningWasCalled.ShouldBeTrue();
 		}
-
 	}
 
 
