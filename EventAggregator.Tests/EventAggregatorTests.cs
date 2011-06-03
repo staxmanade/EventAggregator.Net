@@ -20,7 +20,7 @@ namespace EventAggregator.Net.Tests
 		}
 
 		[Fact]
-		public void When_a_listener_has_been_garbage_collected_the_handler_should_be_removed()
+		public void When_a_listener_has_been_garbage_collected_and_an_event_is_published_the_zombied_handler_should_be_removed()
 		{
 			var eventAggregator = new EventAggregationManager();
 
@@ -68,50 +68,8 @@ namespace EventAggregator.Net.Tests
 
 			warningWasCalled.ShouldBeTrue();
 		}
-
-
-
-        [Fact]
-        public void Can_use_delegate_to_subscribe_to_message()
-        {
-            var eventAggregator = new EventAggregationManager();
-            SomeMessage messageTrapped = null;
-
-            eventAggregator.AddListenerAction<SomeMessage>(msg => { messageTrapped = msg; });
-            eventAggregator.SendMessage<SomeMessage>();
-
-            messageTrapped.ShouldNotBeNull();
-        }
-
-
-        [Fact]
-        public void Can_use_unsubscribe_from_delegate_handler()
-        {
-            var eventAggregator = new EventAggregationManager();
-            SomeMessage messageTrapped = null;
-
-            var disposable = eventAggregator.AddListenerAction<SomeMessage>(msg => { messageTrapped = msg; });
-            disposable.Dispose();
-            eventAggregator.SendMessage<SomeMessage>();
-
-            messageTrapped.ShouldBeNull();
-        }
-    }
-
-
-	public class SomeMessage { }
-
-	public class SomeMessageHandler : IListener<SomeMessage>
-	{
-		private readonly List<SomeMessage> _eventsTrapped = new List<SomeMessage>();
-
-		public IEnumerable<SomeMessage> EventsTrapped { get { return _eventsTrapped; } }
-
-		public void Handle(SomeMessage message)
-		{
-			_eventsTrapped.Add(message);
-		}
 	}
+
 
 	public static class EventAggregatorTestExtensions
 	{
