@@ -39,7 +39,7 @@
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="EventAggregationManager.cs" />
+    <Compile Include="EventAggregator.cs" />
     <Compile Include="EventAggregatorExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

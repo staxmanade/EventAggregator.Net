@@ -34,10 +34,10 @@ $newVersion = Increment-Version $version
 $nuget = ls .\packages\NuGet.CommandLine*\tools\NuGet.exe
 
 $buildRoot = ".\NuGetBuild"
-$eventAggregatorDestination = "$buildRoot\content\EventAggregator"
+$eventAggregatorDestination = "$buildRoot\content\EventAggregator.Net"
 rm $buildRoot -force -recurse -ErrorAction SilentlyContinue
 mkdir $eventAggregatorDestination | out-null
-cp .\EventAggregator\EventAggregationManager.cs $eventAggregatorDestination
+cp .\EventAggregator\EventAggregator.cs $eventAggregatorDestination
 $nuspecFile = "EventAggregator.Net.$newVersion.nuspec"
 cp .\EventAggregator.Net.nuspec "$buildRoot\$nuspecFile"
 pushd $buildRoot

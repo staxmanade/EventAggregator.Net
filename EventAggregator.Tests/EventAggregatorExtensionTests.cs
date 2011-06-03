@@ -7,7 +7,7 @@ namespace EventAggregator.Net.Tests
 		[Fact]
 		public void Can_use_delegate_to_subscribe_to_message()
 		{
-			var eventAggregator = new EventAggregationManager();
+			var eventAggregator = new EventAggregator();
 			SomeMessage messageTrapped = null;
 
 			eventAggregator.AddListenerAction<SomeMessage>(msg => { messageTrapped = msg; });
@@ -20,7 +20,7 @@ namespace EventAggregator.Net.Tests
 		[Fact]
 		public void Can_use_unsubscribe_from_delegate_handler()
 		{
-			var eventAggregator = new EventAggregationManager();
+			var eventAggregator = new EventAggregator();
 			SomeMessage messageTrapped = null;
 
 			var disposable = eventAggregator.AddListenerAction<SomeMessage>(msg => { messageTrapped = msg; });

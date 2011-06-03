@@ -55,17 +55,17 @@ namespace EventAggregator.Net
 	}
 
 	public interface IEventAggregator : IEventPublisher, IEventSubscriptionManager { }
-	public class EventAggregationManager : IEventPublisher, IEventSubscriptionManager
+	public class EventAggregator : IEventPublisher, IEventSubscriptionManager
 	{
 		private readonly ListenerWrapperCollection _listeners = new ListenerWrapperCollection();
 		private readonly Config _config;
 
-		public EventAggregationManager()
+		public EventAggregator()
 			: this(new Config())
 		{
 		}
 
-		public EventAggregationManager(Config config)
+		public EventAggregator(Config config)
 		{
 			_config = config;
 		}
