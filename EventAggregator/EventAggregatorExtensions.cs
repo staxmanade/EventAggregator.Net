@@ -1,6 +1,6 @@
 using System;
 
-namespace EventAggregator.Net
+namespace EventAggregatorNet
 {
     public static class EventAggregatorExtensions
     {

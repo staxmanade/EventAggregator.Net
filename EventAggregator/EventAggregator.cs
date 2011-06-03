@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-namespace EventAggregator.Net
+namespace EventAggregatorNet
 {
 	/*
 	 * EventAggregator origins based on work from StatLight's EventAggregator. Which 

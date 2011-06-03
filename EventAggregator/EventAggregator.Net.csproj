@@ -8,8 +8,8 @@
     <ProjectGuid>{5DE30455-5DB4-418B-B655-5D903DF6966A}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>EventAggregator.Net</RootNamespace>
-    <AssemblyName>EventAggregator.Net</AssemblyName>
+    <RootNamespace>EventAggregatorNet</RootNamespace>
+    <AssemblyName>EventAggregatorNet</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>

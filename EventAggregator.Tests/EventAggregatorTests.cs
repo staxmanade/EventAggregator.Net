@@ -4,7 +4,7 @@ using System.Linq;
 using System.Reflection;
 using Xunit;
 
-namespace EventAggregator.Net.Tests
+namespace EventAggregatorNet.Tests
 {
 	public class EventAggregatorTests
 	{

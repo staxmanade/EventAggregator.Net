@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace EventAggregator.Net.Tests
+namespace EventAggregatorNet.Tests
 {
 	public class SomeMessageHandler : IListener<SomeMessage>
 	{

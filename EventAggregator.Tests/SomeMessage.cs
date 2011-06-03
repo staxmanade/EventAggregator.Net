@@ -1,4 +1,4 @@
-﻿namespace EventAggregator.Net.Tests
+﻿namespace EventAggregatorNet.Tests
 {
 	public class SomeMessage { }
 }

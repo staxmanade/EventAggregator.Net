@@ -8,8 +8,8 @@
     <ProjectGuid>{D5986171-B6DD-4FC1-97D6-33709AEDAE20}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>EventAggregator.Net.Tests</RootNamespace>
-    <AssemblyName>EventAggregator.Net.Tests</AssemblyName>
+    <RootNamespace>EventAggregatorNet.Tests</RootNamespace>
+    <AssemblyName>EventAggregatorNet.Tests</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
