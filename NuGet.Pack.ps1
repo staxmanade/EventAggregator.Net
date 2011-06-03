@@ -30,7 +30,7 @@ if(!$version){
 }
 
 $newVersion = Increment-Version $version
-$newVersion
+
 $nuget = ls .\packages\NuGet.CommandLine*\tools\NuGet.exe
 
 $buildRoot = ".\NuGetBuild"
