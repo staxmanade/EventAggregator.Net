@@ -1,7 +1,7 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 
-namespace EventAggregator.Net.SampleUsage.Samples.AsyncronousMessages
+namespace EventAggregator.Net.SampleUsage.Samples
 {
 	public class AsyncSample
 	{

@@ -1,5 +1,5 @@
 ﻿using System;
-using EventAggregator.Net.SampleUsage.Samples.AsyncronousMessages;
+using EventAggregator.Net.SampleUsage.Samples;
 
 namespace EventAggregator.Net.SampleUsage
 {
@@ -8,8 +8,9 @@ namespace EventAggregator.Net.SampleUsage
 		static void Main(string[] args)
 		{
 
-			AsyncSample.Run();
+			BasicSample.Run();
 
+			//AsyncSample.Run();
 
 
 
