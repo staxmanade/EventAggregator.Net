@@ -17,15 +17,10 @@ namespace EventAggregatorNet
 	 */
 
 	/// <summary>
-	/// Marker interface - TODO: find way to remove
-	/// </summary>
-	public interface IListener { }
-
-	/// <summary>
 	/// Specifies a class that would like to receive particular messages.
 	/// </summary>
 	/// <typeparam name="TMessage">The type of message object to subscribe to.</typeparam>
-	public interface IListener<in TMessage> : IListener
+	public interface IListener<in TMessage>
 	{
 		/// <summary>
 		/// This will be called every time a TMessage is published through the event aggregator
@@ -220,7 +215,7 @@ namespace EventAggregatorNet
 				var listenerInterfaces = listener
 					.GetType()
 					.GetInterfaces()
-					.Where(x => typeof(IListener).IsAssignableFrom(x) && x.IsGenericType);
+					.Where(x => Closes(x, typeof(IListener<>)));
 
 				foreach (var listenerInterface in listenerInterfaces)
 				{
@@ -259,6 +254,27 @@ namespace EventAggregatorNet
 
 				_supportedListeners[messageType].Invoke(target, new[] { message });
 				wasHandled = true;
+			}
+
+			// Copied this function from the FubuCore framework.
+			private static bool Closes(Type type, Type openType)
+			{
+				if (type == null) return false;
+
+				if (type.IsGenericType && type.GetGenericTypeDefinition() == openType) return true;
+
+				foreach (var @interface in type.GetInterfaces())
+				{
+					if (Closes(@interface, openType)) return true;
+				}
+
+				Type baseType = type.BaseType;
+				if (baseType == null) return false;
+
+				bool closes = baseType.IsGenericType && baseType.GetGenericTypeDefinition() == openType;
+				if (closes) return true;
+
+				return type.BaseType == null ? false : Closes(type.BaseType, openType);
 			}
 		}
 
