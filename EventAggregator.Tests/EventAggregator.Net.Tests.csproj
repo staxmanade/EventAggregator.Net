@@ -41,6 +41,7 @@
   <ItemGroup>
     <Compile Include="EventAggregatorExtensionTests.cs" />
     <Compile Include="EventAggregatorTests.cs" />
+    <Compile Include="MultipleListenersOnAggregatingInterfaceTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SomeMessage.cs" />
     <Compile Include="SomeMessageHandler.cs" />

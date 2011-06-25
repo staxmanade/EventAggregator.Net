@@ -31,10 +31,42 @@ namespace EventAggregatorNet.Tests
 
 			eventAggregator.GetListeners().Count().ShouldEqual(0);
 		}
-		public void AddHandlerInScopeThatWillRemoveInstanceWhenGarbageCollected(IEventSubscriptionManager eventSubscriptionManager)
+		public void AddHandlerInScopeThatWillRemoveInstanceWhenGarbageCollected(IEventSubscriptionManager eventSubscriptionManager, bool? holdStrongReference = false)
 		{
 			var someMessageHandler = new SomeMessageHandler();
-			eventSubscriptionManager.AddListener(someMessageHandler);
+			eventSubscriptionManager.AddListener(someMessageHandler, holdStrongReference);
+		}
+		[Fact]
+		public void When_instructed_to_hold_a_strong_reference_by_default_and_the_listener_is_attempted__been_garbage_collected_and_an_event_is_published_the_zombied_handler_should_be_removed()
+		{
+			var config = new EventAggregator.Config
+			{
+				HoldReferences = true
+			};
+			var eventAggregator = new EventAggregator(config);
+
+			AddHandlerInScopeThatWillRemoveInstanceWhenGarbageCollected(eventAggregator, null);
+			GC.Collect();
+
+			eventAggregator.SendMessage<SomeMessage>();
+
+			eventAggregator.GetListeners().Count().ShouldEqual(1);
+		}
+		[Fact]
+		public void When_instructed_to_hold_a_strong_reference_and_the_listener_is_attempted__been_garbage_collected_and_an_event_is_published_the_zombied_handler_should_be_removed()
+		{
+			var config = new EventAggregator.Config
+			{
+				HoldReferences = true
+			};
+			var eventAggregator = new EventAggregator(config);
+
+			AddHandlerInScopeThatWillRemoveInstanceWhenGarbageCollected(eventAggregator, true);
+			GC.Collect();
+
+			eventAggregator.SendMessage<SomeMessage>();
+
+			eventAggregator.GetListeners().Count().ShouldEqual(1);
 		}
 
 
