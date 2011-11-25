@@ -2,6 +2,9 @@
 function Get-Last-NuGet-Version($nuGetPackageId) {
     $feeedUrl = "http://packages.nuget.org/v1/FeedService.svc/Packages()?`$filter=Id%20eq%20'$nuGetPackageId'"
     $webClient = new-object System.Net.WebClient
+	$proxy = New-Object System.Net.WebProxy($global:ProxyUrl, $global:ProxyPort)
+    $proxy.Credentials = (Get-Credential).GetNetworkCredential()
+    $webclient.Proxy = $proxy
     $queryResults = [xml]($webClient.DownloadString($feeedUrl))
     $queryResults.feed.entry | %{ $_.properties.version } | sort-object | select -last 1
 }
@@ -34,10 +37,22 @@ $newVersion = Increment-Version $version
 $nuget = ls .\packages\NuGet.CommandLine*\tools\NuGet.exe
 
 $buildRoot = ".\NuGetBuild"
-$eventAggregatorDestination = "$buildRoot\content\EventAggregator.Net"
+$eventAggregatorDestination = "$buildRoot\content\Events"
 rm $buildRoot -force -recurse -ErrorAction SilentlyContinue
 mkdir $eventAggregatorDestination | out-null
-cp .\EventAggregator\EventAggregator.cs $eventAggregatorDestination
+cp .\EventAggregator\EventAggregator.cs (Join-Path $eventAggregatorDestination "EventAggregator.cs.pp")
+$eaFile = Join-Path $eventAggregatorDestination EventAggregator.cs.pp
+(Get-Content $eaFile) | 
+Foreach-Object { $_ -replace 'namespace EventAggregatorNet', 'namespace $rootnamespace$.Events' } | 
+Set-Content $eaFile
+
+
+cp .\EventAggregator\EventAggregatorExtensions.cs (Join-Path $eventAggregatorDestination "EventAggregatorExtensions.cs.pp")
+$eaFile = Join-Path $eventAggregatorDestination EventAggregatorExtensions.cs.pp
+(Get-Content $eaFile) | 
+Foreach-Object { $_ -replace 'namespace EventAggregatorNet', 'namespace $rootnamespace$.Events' } | 
+Set-Content $eaFile
+
 $nuspecFile = "EventAggregator.Net.$newVersion.nuspec"
 cp .\EventAggregator.Net.nuspec "$buildRoot\$nuspecFile"
 pushd $buildRoot

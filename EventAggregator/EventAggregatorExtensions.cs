@@ -1,5 +1,6 @@
 using System;
 
+// ReSharper disable InconsistentNaming
 namespace EventAggregatorNet
 {
     public static class EventAggregatorExtensions
@@ -47,5 +48,5 @@ namespace EventAggregatorNet
             }
         }
     }
-
 }
+// ReSharper enable InconsistentNaming
