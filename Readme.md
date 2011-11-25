@@ -10,3 +10,9 @@ How can I use this?
 --
 1. Install via NuGet `Install-Package EventAggregator.Net`
 2. Checkout the samples project to view some various uses.
+
+Contributors
+--
+Thanks for contributions from:
+
+[JakeGinnivan](https://github.com/JakeGinnivan)
