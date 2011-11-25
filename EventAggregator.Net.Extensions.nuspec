@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+  <metadata>
+    <id>EventAggregator.Net.Extensions</id>
+    <version>0.1</version>
+    <title />
+    <authors>Jason Jarrett</authors>
+    <owners />
+    <projectUrl>https://github.com/staxmanade/EventAggregator.Net</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>A .Net class that extends the EventAggregator.Net package.</description>
+    <summary />
+    <dependencies>
+      <dependency id="EventAggregator.Net" />
+    </dependencies>
+  </metadata>
+</package>
