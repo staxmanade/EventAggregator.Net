@@ -8,8 +8,8 @@
     <ProjectGuid>{FBCB111D-C32A-45E5-A354-438FA4D326A5}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>EventAggregator.Net.SampleUsage</RootNamespace>
-    <AssemblyName>EventAggregator.Net.SampleUsage</AssemblyName>
+    <RootNamespace>EventAggregatorNet.SampleUsage</RootNamespace>
+    <AssemblyName>EventAggregatorNet.SampleUsage</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <TargetFrameworkProfile>Client</TargetFrameworkProfile>
     <FileAlignment>512</FileAlignment>
@@ -43,10 +43,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\EventAggregator\EventAggregator.cs">
+      <Link>Events\EventAggregator.cs</Link>
+    </Compile>
     <Compile Include="HelperExtensions.cs" />
     <Compile Include="SampleEventMessage.cs" />
     <Compile Include="Samples\AsyncSample.cs" />
-    <Compile Include="EventAggregator\EventAggregationManager.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Samples\BasicSample.cs" />

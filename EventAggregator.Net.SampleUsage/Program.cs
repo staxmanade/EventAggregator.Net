@@ -1,22 +1,22 @@
 ﻿using System;
-using EventAggregator.Net.SampleUsage.Samples;
+using EventAggregatorNet.SampleUsage.Samples;
 
-namespace EventAggregator.Net.SampleUsage
+namespace EventAggregatorNet.SampleUsage
 {
-	class Program
-	{
-		static void Main(string[] args)
-		{
+    class Program
+    {
+        static void Main(string[] args)
+        {
 
-			BasicSample.Run();
+            BasicSample.Run();
 
-			//AsyncSample.Run();
+            AsyncSample.Run();
 
 
 
-			Console.WriteLine("");
-			Console.WriteLine("Press any key...");
-			Console.Read();
-		}
-	}
+            Console.WriteLine("");
+            Console.WriteLine("Press any key...");
+            Console.Read();
+        }
+    }
 }

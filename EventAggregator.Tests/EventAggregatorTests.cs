@@ -97,7 +97,6 @@ namespace EventAggregatorNet.Tests
 
 			eventAggregator.SendMessage<SomeMessage>();
 
-
 			warningWasCalled.ShouldBeTrue();
 		}
 
