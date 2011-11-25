@@ -46,13 +46,6 @@ $eaFile = Join-Path $eventAggregatorDestination EventAggregator.cs.pp
 Foreach-Object { $_ -replace 'namespace EventAggregatorNet', 'namespace $rootnamespace$.Events' } | 
 Set-Content $eaFile
 
-
-cp .\EventAggregator\EventAggregatorExtensions.cs (Join-Path $eventAggregatorDestination "EventAggregatorExtensions.cs.pp")
-$eaFile = Join-Path $eventAggregatorDestination EventAggregatorExtensions.cs.pp
-(Get-Content $eaFile) | 
-Foreach-Object { $_ -replace 'namespace EventAggregatorNet', 'namespace $rootnamespace$.Events' } | 
-Set-Content $eaFile
-
 $nuspecFile = "EventAggregator.Net.$newVersion.nuspec"
 cp .\EventAggregator.Net.nuspec "$buildRoot\$nuspecFile"
 pushd $buildRoot
