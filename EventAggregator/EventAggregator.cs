@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
+// ReSharper disable InconsistentNaming
 namespace EventAggregatorNet
 {
 	/*
@@ -76,12 +77,14 @@ namespace EventAggregatorNet
 		public void SendMessage<TMessage>(TMessage message, Action<Action> marshal = null)
 		{
 			if (marshal == null)
-				marshal = _config.ThreadMarshaler;
+				marshal = _config.DefaultThreadMarshaler;
 
 			var wasAnyMessageHandled = Call<IListener<TMessage>>(message, marshal);
 
 			if (wasAnyMessageHandled)
+// ReSharper disable RedundantJumpStatement
 				return;
+// ReSharper restore RedundantJumpStatement
 		}
 
 		/// <summary>
@@ -105,8 +108,8 @@ namespace EventAggregatorNet
 				{
 					if (o.Handles<TListener>())
 					{
-						bool wasThisOneCalled = false;
-						o.TryHandle<TListener>(message, ref wasThisOneCalled);
+						bool wasThisOneCalled;
+						o.TryHandle<TListener>(message, out wasThisOneCalled);
 						if (wasThisOneCalled)
 							listenerCalledCount++;
 					}
@@ -298,7 +301,7 @@ namespace EventAggregatorNet
 				return false;
 			}
 
-			public void TryHandle<TListener>(object message, ref bool wasHandled)
+			public void TryHandle<TListener>(object message, out bool wasHandled)
 				where TListener : class
 			{
 				var target = _reference.Target;
@@ -334,7 +337,7 @@ namespace EventAggregatorNet
 		public class Config
 		{
 			public Action<object> OnMessageNotPublishedBecauseZeroListeners = msg => { /* TODO: possibly Trace message?*/ };
-			public Action<Action> ThreadMarshaler = action => action();
+			public Action<Action> DefaultThreadMarshaler = action => action();
 
 			/// <summary>
 			/// If true instructs the EventAggregator to hold onto a reference to all listener objects. You will then have to explicitly remove them from the EventAggrator.
@@ -344,3 +347,4 @@ namespace EventAggregatorNet
 		}
 	}
 }
+// ReSharper enable InconsistentNaming
