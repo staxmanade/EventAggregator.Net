@@ -10,8 +10,5 @@
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>A .Net class that extends the EventAggregator.Net package.</description>
     <summary />
-    <dependencies>
-      <dependency id="EventAggregator.Net" />
-    </dependencies>
   </metadata>
 </package>
