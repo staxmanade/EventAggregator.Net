@@ -100,6 +100,7 @@ namespace EventAggregatorNet.Tests
 
 			warningWasCalled.ShouldBeTrue();
 		}
+
 	}
 
 

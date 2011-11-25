@@ -40,14 +40,17 @@ namespace EventAggregatorNet
 		/// <param name="listener"></param>
 		/// <param name="holdStrongReference">determines if the EventAggregator should hold a weak or strong reference to the listener object. Use the Config level option unless overriden by the parameter.</param>
 		/// <returns>Returns the current instance of IEventSubscriptionManager to allow for easy additional</returns>
-		IEventSubscriptionManager AddListener(object listener, bool? holdStrongReference = null);
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1026:DefaultParametersShouldNotBeUsed")]
+        IEventSubscriptionManager AddListener(object listener, bool? holdStrongReference = null);
 		IEventSubscriptionManager RemoveListener(object listener);
 	}
 
 	public interface IEventPublisher
 	{
-		void SendMessage<TMessage>(TMessage message, Action<Action> marshal = null);
-		void SendMessage<TMessage>(Action<Action> marshal = null)
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1026:DefaultParametersShouldNotBeUsed")]
+        void SendMessage<TMessage>(TMessage message, Action<Action> marshal = null);
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1004:GenericMethodsShouldProvideTypeParameter"), System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1026:DefaultParametersShouldNotBeUsed")]
+        void SendMessage<TMessage>(Action<Action> marshal = null)
 			where TMessage : new();
 	}
 
@@ -74,17 +77,13 @@ namespace EventAggregatorNet
 		/// <typeparam name="TMessage">The type of message being sent</typeparam>
 		/// <param name="message">The message instance</param>
 		/// <param name="marshal">You can optionally override how the message publication action is marshalled</param>
-		public void SendMessage<TMessage>(TMessage message, Action<Action> marshal = null)
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1026:DefaultParametersShouldNotBeUsed")]
+        public void SendMessage<TMessage>(TMessage message, Action<Action> marshal = null)
 		{
 			if (marshal == null)
 				marshal = _config.DefaultThreadMarshaler;
 
-			var wasAnyMessageHandled = Call<IListener<TMessage>>(message, marshal);
-
-			if (wasAnyMessageHandled)
-// ReSharper disable RedundantJumpStatement
-				return;
-// ReSharper restore RedundantJumpStatement
+			Call<IListener<TMessage>>(message, marshal);
 		}
 
 		/// <summary>
@@ -92,13 +91,14 @@ namespace EventAggregatorNet
 		/// </summary>
 		/// <typeparam name="TMessage">The type of message being sent</typeparam>
 		/// <param name="marshal">You can optionally override how the message publication action is marshalled</param>
-		public void SendMessage<TMessage>(Action<Action> marshal = null)
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1026:DefaultParametersShouldNotBeUsed"), System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1004:GenericMethodsShouldProvideTypeParameter")]
+        public void SendMessage<TMessage>(Action<Action> marshal = null)
 			where TMessage : new()
 		{
 			SendMessage(new TMessage(), marshal);
 		}
 
-		private bool Call<TListener>(object message, Action<Action> marshaller)
+		private void Call<TListener>(object message, Action<Action> marshaller)
 			where TListener : class
 		{
 			int listenerCalledCount = 0;
@@ -122,11 +122,14 @@ namespace EventAggregatorNet
 			{
 				_config.OnMessageNotPublishedBecauseZeroListeners(message);
 			}
-			return wasAnyListenerCalled;
 		}
 
+        public IEventSubscriptionManager AddListener(object listener)
+        {
+            return AddListener(listener, null);
+        }
 
-		public IEventSubscriptionManager AddListener(object listener, bool? holdStrongReference = null)
+        public IEventSubscriptionManager AddListener(object listener, bool? holdStrongReference)
 		{
 			bool holdRef = _config.HoldReferences;
 			if (holdStrongReference.HasValue)
@@ -141,7 +144,6 @@ namespace EventAggregatorNet
 			_listeners.RemoveListener(listener);
 			return this;
 		}
-
 
 		/// <summary>
 		/// Wrapper collection of ListenerWrappers to manage things like 
@@ -333,11 +335,22 @@ namespace EventAggregatorNet
 			}
 		}
 
-
-		public class Config
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1034:NestedTypesShouldNotBeVisible")]
+        public class Config
 		{
-			public Action<object> OnMessageNotPublishedBecauseZeroListeners = msg => { /* TODO: possibly Trace message?*/ };
-			public Action<Action> DefaultThreadMarshaler = action => action();
+            private Action<object> _onMessageNotPublishedBecauseZeroListeners = msg => { /* TODO: possibly Trace message?*/ };
+            public Action<object> OnMessageNotPublishedBecauseZeroListeners
+            {
+                get { return _onMessageNotPublishedBecauseZeroListeners; }
+                set { _onMessageNotPublishedBecauseZeroListeners = value; }
+            }
+
+            private Action<Action> _defaultThreadMarshaler = action => action();
+            public Action<Action> DefaultThreadMarshaler
+            {
+                get { return _defaultThreadMarshaler; }
+                set { _defaultThreadMarshaler = value; }
+            }
 
 			/// <summary>
 			/// If true instructs the EventAggregator to hold onto a reference to all listener objects. You will then have to explicitly remove them from the EventAggrator.
