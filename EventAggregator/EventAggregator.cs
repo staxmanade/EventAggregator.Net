@@ -55,7 +55,7 @@ namespace EventAggregatorNet
     }
 
     public interface IEventAggregator : IEventPublisher, IEventSubscriptionManager { }
-    public class EventAggregator : IEventPublisher, IEventSubscriptionManager
+    public class EventAggregator : IEventAggregator
     {
         private readonly ListenerWrapperCollection _listeners;
         private readonly Config _config;
