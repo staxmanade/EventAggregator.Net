@@ -70,11 +70,20 @@ namespace EventAggregatorNet
         /// <summary>
         /// Adds the given listener object to the EventAggregator.
         /// </summary>
-        /// <param name="listener">Object that should be implementing IListener(of T's)</param>
+        /// <param name="listener">Object that should be implementing IListener(of T's), this overload is used when your listeners to multiple message types</param>
         /// <param name="holdStrongReference">determines if the EventAggregator should hold a weak or strong reference to the listener object. If null it will use the Config level option unless overriden by the parameter.</param>
         /// <returns>Returns the current IEventSubscriptionManager to allow for easy fluent additions.</returns>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1026:DefaultParametersShouldNotBeUsed")]
         IEventSubscriptionManager AddListener(object listener, bool? holdStrongReference = null);
+
+        /// <summary>
+        /// Adds the given listener object to the EventAggregator.
+        /// </summary>
+        /// <typeparam name="T">Listener Message type</typeparam>
+        /// <param name="listener"></param>
+        /// <param name="holdStrongReference">determines if the EventAggregator should hold a weak or strong reference to the listener object. If null it will use the Config level option unless overriden by the parameter.</param>
+        /// <returns>Returns the current IEventSubscriptionManager to allow for easy fluent additions.</returns>
+        IEventSubscriptionManager AddListener<T>(IListener<T> listener, bool? holdStrongReference = null);
 
         /// <summary>
         /// Removes the listener object from the EventAggregator
@@ -145,15 +154,12 @@ namespace EventAggregatorNet
             int listenerCalledCount = 0;
             marshaller(() =>
             {
-                foreach (ListenerWrapper o in _listeners)
+                foreach (ListenerWrapper o in _listeners.Where(o => o.Handles<TListener>()))
                 {
-                    if (o.Handles<TListener>())
-                    {
-                        bool wasThisOneCalled;
-                        o.TryHandle<TListener>(message, out wasThisOneCalled);
-                        if (wasThisOneCalled)
-                            listenerCalledCount++;
-                    }
+                    bool wasThisOneCalled;
+                    o.TryHandle<TListener>(message, out wasThisOneCalled);
+                    if (wasThisOneCalled)
+                        listenerCalledCount++;
                 }
             });
 
@@ -176,6 +182,13 @@ namespace EventAggregatorNet
             if (holdStrongReference.HasValue)
                 holdRef = holdStrongReference.Value;
             _listeners.AddListener(listener, holdRef);
+
+            return this;
+        }
+
+        public IEventSubscriptionManager AddListener<T>(IListener<T> listener, bool? holdStrongReference)
+        {
+            AddListener((object)listener, holdStrongReference);
 
             return this;
         }
