@@ -100,7 +100,30 @@ namespace EventAggregatorNet.Tests
 			warningWasCalled.ShouldBeTrue();
 		}
 
-	}
+        [Fact]
+        public void When_object_has_multiple_listeners_should_subscribe_to_all()
+        {
+            var eventAggregator = new EventAggregator();
+            var handler = new SomeMessageHandler2();
+            eventAggregator.AddListener(handler);
+            eventAggregator.SendMessage<SomeMessage>();
+            eventAggregator.SendMessage<SomeMessage2>();
+
+            handler.EventsTrapped.Count().ShouldEqual(2);
+        }
+
+        [Fact]
+        public void When_object_has_multiple_listeners_defined_in_an_interface_should_subscribe_to_all()
+        {
+            var eventAggregator = new EventAggregator();
+            var handler = new SomeMessageHandler3();
+            eventAggregator.AddListener(handler);
+            eventAggregator.SendMessage<SomeMessage>();
+            eventAggregator.SendMessage<SomeMessage2>();
+
+            handler.EventsTrapped.Count().ShouldEqual(2);
+        }
+    }
 
 
 	public static class EventAggregatorTestExtensions
