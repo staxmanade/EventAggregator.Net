@@ -54,7 +54,11 @@ namespace EventAggregatorNet
     /// Specifies a class that would like to receive particular messages.
     /// </summary>
     /// <typeparam name="TMessage">The type of message object to subscribe to.</typeparam>
+#if WINDOWS_PHONE
+    public interface IListener<TMessage>
+#else
     public interface IListener<in TMessage>
+#endif
     {
         /// <summary>
         /// This will be called every time a TMessage is published through the event aggregator
