@@ -1,5 +1,5 @@
 ﻿// ReSharper disable InconsistentNaming
-namespace EventAggregatorNet
+namespace EventAggregatorSpike.Events
 {
     using System;
     using System.Collections;
@@ -317,15 +317,25 @@ namespace EventAggregatorNet
                 if (type == null)
                     return new Type[0];
 
+#if NETFX_CORE
+                List<Type> interfaces = type.GetTypeInfo().ImplementedInterfaces.ToList();
+#else
                 List<Type> interfaces = type.GetInterfaces().ToList();
+#endif
 
                 foreach (var @interface in interfaces.ToArray())
                 {
                     interfaces.AddRange(GetBaseInterfaceType(@interface));
                 }
 
+#if NETFX_CORE
+                if (type.GetTypeInfo().IsInterface)
+#else
                 if (type.IsInterface)
+#endif
+                {
                     interfaces.Add(type);
+                }
 
                 return interfaces.Distinct();
             }
@@ -344,8 +354,14 @@ namespace EventAggregatorNet
 
                 foreach (var listenerInterface in listenerInterfaces)
                 {
+#if NETFX_CORE
+                    var typeInfo = listenerInterface.GetTypeInfo();
+                    var handleMethod = typeInfo.GetDeclaredMethod(HandleMethodName);
+                    var messageType = typeInfo.GenericTypeArguments.First();
+#else
                     var handleMethod = listenerInterface.GetMethod(HandleMethodName);
                     var messageType = listenerInterface.GetGenericArguments().First();
+#endif
                     _supportedListeners.Add(messageType, handleMethod);
                 }
             }
@@ -355,7 +371,11 @@ namespace EventAggregatorNet
             public bool Handles<TListener>()
                 where TListener : class
             {
+#if NETFX_CORE
+                var messageType = typeof(TListener).GetTypeInfo().GenericTypeArguments.First();
+#else
                 var messageType = typeof(TListener).GetGenericArguments().First();
+#endif
                 if (_supportedListeners.ContainsKey(messageType))
                     return true;
                 return false;
@@ -372,7 +392,11 @@ namespace EventAggregatorNet
                     return;
                 }
 
+#if NETFX_CORE
+                var messageType = typeof(TListener).GetTypeInfo().GenericTypeArguments.First();
+#else
                 var messageType = typeof(TListener).GetGenericArguments().First();
+#endif
 
                 if (!_supportedListeners.ContainsKey(messageType))
                     return;
@@ -386,8 +410,14 @@ namespace EventAggregatorNet
                 if (type == null)
                     return false;
 
+#if NETFX_CORE
+                if (type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == openType)
+#else
                 if (type.IsGenericType && type.GetGenericTypeDefinition() == openType)
+#endif
+                {
                     return true;
+                }
 
                 return false;
             }

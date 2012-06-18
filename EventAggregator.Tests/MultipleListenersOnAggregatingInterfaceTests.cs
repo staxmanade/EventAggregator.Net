@@ -1,4 +1,5 @@
 using System;
+using EventAggregatorSpike.Events;
 using Xunit;
 
 namespace EventAggregatorNet.Tests

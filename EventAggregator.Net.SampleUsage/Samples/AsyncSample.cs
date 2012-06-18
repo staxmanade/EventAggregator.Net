@@ -1,6 +1,7 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 using EventAggregator.Net.SampleUsage;
+using EventAggregatorSpike.Events;
 
 namespace EventAggregatorNet.SampleUsage.Samples
 {
@@ -8,13 +9,13 @@ namespace EventAggregatorNet.SampleUsage.Samples
     {
         public static void Run()
         {
-            var config = new EventAggregator.Config
+            var config = new EventAggregatorSpike.Events.EventAggregator.Config
             {
                 // Make the marshaler run in the background thread
                 DefaultThreadMarshaler = action => Task.Factory.StartNew(action),
             };
 
-            var eventAggregationManager = new EventAggregator(config);
+            var eventAggregationManager = new EventAggregatorSpike.Events.EventAggregator(config);
             eventAggregationManager.AddListener(new LongRunningHandler());
 
             "EventAggregator setup complete".Log();
