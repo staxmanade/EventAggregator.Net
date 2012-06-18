@@ -1,5 +1,5 @@
 using System;
-using EventAggregatorSpike.Events;
+using EventAggregator.Events;
 
 // ReSharper disable InconsistentNaming
 namespace EventAggregatorNet

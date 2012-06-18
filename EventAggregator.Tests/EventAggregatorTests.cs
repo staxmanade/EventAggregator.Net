@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using EventAggregatorSpike.Events;
+using EventAggregator.Events;
 using Xunit;
 
 namespace EventAggregatorNet.Tests
@@ -13,7 +13,7 @@ namespace EventAggregatorNet.Tests
 		public void Should_send_message()
 		{
 			var someMessageHandler = new SomeMessageHandler();
-			var eventAggregator = new EventAggregator();
+            var eventAggregator = new EventAggregator.Events.EventAggregator();
 
 			eventAggregator.AddListener(someMessageHandler);
 			eventAggregator.SendMessage<SomeMessage>();
@@ -23,7 +23,7 @@ namespace EventAggregatorNet.Tests
 		[Fact]
 		public void When_a_listener_has_been_garbage_collected_and_an_event_is_published_the_zombied_handler_should_be_removed()
 		{
-			var eventAggregator = new EventAggregator();
+            var eventAggregator = new EventAggregator.Events.EventAggregator();
 
 			AddHandlerInScopeThatWillRemoveInstanceWhenGarbageCollected(eventAggregator);
 			GC.Collect();
@@ -40,11 +40,11 @@ namespace EventAggregatorNet.Tests
 		[Fact]
 		public void When_instructed_to_hold_a_strong_reference_by_default_and_the_listener_is_attempted__been_garbage_collected_and_an_event_is_published_the_zombied_handler_should_be_removed()
 		{
-			var config = new EventAggregator.Config
+            var config = new EventAggregator.Events.EventAggregator.Config
 			{
 				HoldReferences = true
 			};
-			var eventAggregator = new EventAggregator(config);
+            var eventAggregator = new EventAggregator.Events.EventAggregator(config);
 
 			AddHandlerInScopeThatWillRemoveInstanceWhenGarbageCollected(eventAggregator, null);
 			GC.Collect();
@@ -56,11 +56,11 @@ namespace EventAggregatorNet.Tests
 		[Fact]
 		public void When_instructed_to_hold_a_strong_reference_and_the_listener_is_attempted__been_garbage_collected_and_an_event_is_published_the_zombied_handler_should_be_removed()
 		{
-			var config = new EventAggregator.Config
+            var config = new EventAggregator.Events.EventAggregator.Config
 			{
 				HoldReferences = true
 			};
-			var eventAggregator = new EventAggregator(config);
+            var eventAggregator = new EventAggregator.Events.EventAggregator(config);
 
 			AddHandlerInScopeThatWillRemoveInstanceWhenGarbageCollected(eventAggregator, true);
 			GC.Collect();
@@ -75,7 +75,7 @@ namespace EventAggregatorNet.Tests
 		public void Can_unsubscribe_manually()
 		{
 			var someMessageHandler = new SomeMessageHandler();
-			var eventAggregator = new EventAggregator();
+            var eventAggregator = new EventAggregator.Events.EventAggregator();
 			eventAggregator.AddListener(someMessageHandler);
 			eventAggregator.SendMessage<SomeMessage>();
 			someMessageHandler.EventsTrapped.Count().ShouldEqual(1);
@@ -91,10 +91,10 @@ namespace EventAggregatorNet.Tests
 		[Fact]
 		public void When_no_subscribers_can_detect_nothing_was_published()
 		{
-			var config = new EventAggregator.Config();
+            var config = new EventAggregator.Events.EventAggregator.Config();
 			bool warningWasCalled = false;
 			config.OnMessageNotPublishedBecauseZeroListeners = msg => { warningWasCalled = true; };
-			var eventAggregator = new EventAggregator(config);
+            var eventAggregator = new EventAggregator.Events.EventAggregator(config);
 
 			eventAggregator.SendMessage<SomeMessage>();
 
@@ -104,7 +104,7 @@ namespace EventAggregatorNet.Tests
         [Fact]
         public void When_object_has_multiple_listeners_should_subscribe_to_all()
         {
-            var eventAggregator = new EventAggregator();
+            var eventAggregator = new EventAggregator.Events.EventAggregator();
             var handler = new SomeMessageHandler2();
             eventAggregator.AddListener(handler);
             eventAggregator.SendMessage<SomeMessage>();
@@ -116,7 +116,7 @@ namespace EventAggregatorNet.Tests
         [Fact]
         public void When_object_has_multiple_listeners_defined_in_an_interface_should_subscribe_to_all()
         {
-            var eventAggregator = new EventAggregator();
+            var eventAggregator = new EventAggregator.Events.EventAggregator();
             var handler = new SomeMessageHandler3();
             eventAggregator.AddListener(handler);
             eventAggregator.SendMessage<SomeMessage>();

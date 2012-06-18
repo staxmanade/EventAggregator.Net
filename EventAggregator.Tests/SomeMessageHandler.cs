@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using EventAggregatorSpike.Events;
+using EventAggregator.Events;
 
 namespace EventAggregatorNet.Tests
 {
