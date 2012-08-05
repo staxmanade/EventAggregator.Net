@@ -1,5 +1,4 @@
-﻿using EventAggregator.Events;
-using EventAggregator.Net.SampleUsage;
+﻿using EventAggregator.Net.SampleUsage;
 
 namespace EventAggregatorNet.SampleUsage.Samples
 {
@@ -7,7 +6,7 @@ namespace EventAggregatorNet.SampleUsage.Samples
     {
         public static void Run()
         {
-            var eventAggregationManager = new EventAggregator.Events.EventAggregator();
+            var eventAggregationManager = new EventAggregator();
 
             eventAggregationManager.AddListener(new BasicHandler());
 

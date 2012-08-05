@@ -1,4 +1,3 @@
-using EventAggregator.Events;
 using Xunit;
 
 namespace EventAggregatorNet.Tests
@@ -15,7 +14,7 @@ namespace EventAggregatorNet.Tests
 		public void Should_be_able_to_subscribe_to_aggregating_interface()
 		{
 			var someMessageHandler = new MyClassHandler();
-            var eventAggregator = new EventAggregator.Events.EventAggregator();
+            var eventAggregator = new EventAggregator();
 			eventAggregator.AddListener(someMessageHandler);
 
 			eventAggregator.SendMessage<MyClass1>();

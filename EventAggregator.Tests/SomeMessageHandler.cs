@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using EventAggregator.Events;
 
 namespace EventAggregatorNet.Tests
 {

@@ -1,5 +1,5 @@
 ﻿// ReSharper disable InconsistentNaming
-namespace EventAggregator.Events
+namespace EventAggregatorNet
 {
     using System;
     using System.Collections;
