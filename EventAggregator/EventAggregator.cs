@@ -158,7 +158,7 @@ namespace EventAggregatorNet
             int listenerCalledCount = 0;
             marshaller(() =>
             {
-                foreach (ListenerWrapper o in _listeners.Where(o => o.Handles<TListener>()))
+                foreach (ListenerWrapper o in _listeners.Where(o => o.Handles<TListener>(message)))
                 {
                     bool wasThisOneCalled;
                     o.TryHandle<TListener>(message, out wasThisOneCalled);
@@ -368,7 +368,7 @@ namespace EventAggregatorNet
 
             public object ListenerInstance { get { return _reference.Target; } }
 
-            public bool Handles<TListener>()
+            public bool Handles<TListener>(object message)
                 where TListener : class
             {
 #if NETFX_CORE
@@ -377,6 +377,8 @@ namespace EventAggregatorNet
                 var messageType = typeof(TListener).GetGenericArguments().First();
 #endif
                 if (_supportedListeners.ContainsKey(messageType))
+                    return true;
+                if ((message != null) && (_supportedListeners.ContainsKey(message.GetType())))
                     return true;
                 return false;
             }
@@ -397,9 +399,18 @@ namespace EventAggregatorNet
 #else
                 var messageType = typeof(TListener).GetGenericArguments().First();
 #endif
-
                 if (!_supportedListeners.ContainsKey(messageType))
-                    return;
+                {
+                    if (message == null)
+                    {
+                        return;
+                    }
+                    messageType = message.GetType();
+                    if (!_supportedListeners.ContainsKey(messageType))
+                    {
+                        return;
+                    }
+                }
 
                 _supportedListeners[messageType].Invoke(target, new[] { message });
                 wasHandled = true;
