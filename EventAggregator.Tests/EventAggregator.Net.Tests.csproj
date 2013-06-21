@@ -39,6 +39,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="MessageInheritanceTests.cs" />
     <Compile Include="SendMessageWithBaseTypeTests.cs" />
     <Compile Include="EventAggregatorExtensionTests.cs" />
     <Compile Include="EventAggregatorTests.cs" />

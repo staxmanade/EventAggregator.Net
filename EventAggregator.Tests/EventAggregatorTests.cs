@@ -31,11 +31,13 @@ namespace EventAggregatorNet.Tests
 
 			eventAggregator.GetListeners().Count().ShouldEqual(0);
 		}
-		public void AddHandlerInScopeThatWillRemoveInstanceWhenGarbageCollected(IEventSubscriptionManager eventSubscriptionManager, bool? holdStrongReference = false)
+
+		private void AddHandlerInScopeThatWillRemoveInstanceWhenGarbageCollected(IEventSubscriptionManager eventSubscriptionManager, bool? holdStrongReference = false)
 		{
 			var someMessageHandler = new SomeMessageHandler();
 			eventSubscriptionManager.AddListener(someMessageHandler, holdStrongReference);
 		}
+
 		[Fact]
 		public void When_instructed_to_hold_a_strong_reference_by_default_and_the_listener_is_attempted__been_garbage_collected_and_an_event_is_published_the_zombied_handler_should_be_removed()
 		{
@@ -52,6 +54,7 @@ namespace EventAggregatorNet.Tests
 
 			eventAggregator.GetListeners().Count().ShouldEqual(1);
 		}
+
 		[Fact]
 		public void When_instructed_to_hold_a_strong_reference_and_the_listener_is_attempted__been_garbage_collected_and_an_event_is_published_the_zombied_handler_should_be_removed()
 		{
@@ -69,6 +72,29 @@ namespace EventAggregatorNet.Tests
 			eventAggregator.GetListeners().Count().ShouldEqual(1);
 		}
 
+        [Fact]
+        public void Can_remove_a_good_listener_with_a_zombied_listener()
+        {
+            var eventAggregator = new EventAggregator();
+
+            SomeMessageHandler2 messageHandler2 = new SomeMessageHandler2();
+            AddHandlerInScopeThatWillRemoveInstanceWhenGarbageCollected(eventAggregator, false);
+            eventAggregator.AddListener(messageHandler2);
+            GC.Collect();
+
+            // both good and zombied listeners
+            eventAggregator.GetListeners().Count().ShouldEqual(2);
+
+            // should not throw if removing a good listener
+            eventAggregator.RemoveListener(messageHandler2);
+
+            // should be only zombie left
+            eventAggregator.GetListeners().Count().ShouldEqual(1);
+            eventAggregator.SendMessage<SomeMessage>();
+
+            // after call to SendMessage, the zombied listener should be removed.
+            eventAggregator.GetListeners().Count().ShouldEqual(0);
+        }
 
 		[Fact]
 		public void Can_unsubscribe_manually()
@@ -85,7 +111,6 @@ namespace EventAggregatorNet.Tests
 
 			someMessageHandler.EventsTrapped.Count().ShouldEqual(1);
 		}
-
 
 		[Fact]
 		public void When_no_subscribers_can_detect_nothing_was_published()
@@ -123,8 +148,26 @@ namespace EventAggregatorNet.Tests
 
             handler.EventsTrapped.Count().ShouldEqual(2);
         }
-    }
 
+        [Fact]
+        public void Should_throw_when_null_listener_added()
+        {
+            var eventAggregator = new EventAggregator();
+            typeof(ArgumentNullException).ShouldBeThrownBy(() => eventAggregator.AddListener(null, null));
+        }
+
+        [Fact]
+        public void Should_throw_when_listener_with_no_interfaces_added()
+        {
+            var eventAggregator = new EventAggregator();
+            NoListenerInterfaces noListenerInterfaces = new NoListenerInterfaces();
+            typeof(ArgumentException).ShouldBeThrownBy(() => eventAggregator.AddListener(noListenerInterfaces, null));
+        }
+
+        public class NoListenerInterfaces // No IListener interfaces
+        {
+        }
+    }
 
 	public static class EventAggregatorTestExtensions
 	{
