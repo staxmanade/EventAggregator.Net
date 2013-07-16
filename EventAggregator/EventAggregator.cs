@@ -102,12 +102,15 @@ namespace EventAggregatorNet
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1026:DefaultParametersShouldNotBeUsed")]
         void SendMessage<TMessage>(TMessage message, Action<Action> marshal = null);
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1004:GenericMethodsShouldProvideTypeParameter"), System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1026:DefaultParametersShouldNotBeUsed")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1004:GenericMethodsShouldProvideTypeParameter"),
+         System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1026:DefaultParametersShouldNotBeUsed")]
         void SendMessage<TMessage>(Action<Action> marshal = null)
             where TMessage : new();
     }
 
-    public interface IEventAggregator : IEventPublisher, IEventSubscriptionManager { }
+    public interface IEventAggregator : IEventPublisher, IEventSubscriptionManager
+    {
+    }
 
     public class EventAggregator : IEventAggregator
     {
@@ -145,7 +148,9 @@ namespace EventAggregatorNet
         /// </summary>
         /// <typeparam name="TMessage">The type of message being sent</typeparam>
         /// <param name="marshal">You can optionally override how the message publication action is marshalled</param>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1026:DefaultParametersShouldNotBeUsed"), System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1004:GenericMethodsShouldProvideTypeParameter")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1026:DefaultParametersShouldNotBeUsed"),
+         System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design",
+             "CA1004:GenericMethodsShouldProvideTypeParameter")]
         public void SendMessage<TMessage>(Action<Action> marshal = null)
             where TMessage : new()
         {
@@ -157,15 +162,15 @@ namespace EventAggregatorNet
         {
             int listenerCalledCount = 0;
             marshaller(() =>
-            {
-                foreach (ListenerWrapper o in _listeners.Where(o => o.Handles<TListener>(message)))
                 {
-                    bool wasThisOneCalled;
-                    o.TryHandle<TListener>(message, out wasThisOneCalled);
-                    if (wasThisOneCalled)
-                        listenerCalledCount++;
-                }
-            });
+                    foreach (ListenerWrapper o in _listeners.Where(o => o.Handles<TListener>() || o.HandlesMessage(message)))
+                    {
+                        bool wasThisOneCalled;
+                        o.TryHandle<TListener>(message, out wasThisOneCalled);
+                        if (wasThisOneCalled)
+                            listenerCalledCount++;
+                    }
+                });
 
             var wasAnyListenerCalled = listenerCalledCount > 0;
 
@@ -182,17 +187,20 @@ namespace EventAggregatorNet
 
         public IEventSubscriptionManager AddListener(object listener, bool? holdStrongReference)
         {
+            if (listener == null) throw new ArgumentNullException("listener");
+
             bool holdRef = _config.HoldReferences;
             if (holdStrongReference.HasValue)
                 holdRef = holdStrongReference.Value;
-            _listeners.AddListener(listener, holdRef);
+            bool supportMessageInheritance = _config.SupportMessageInheritance;
+            _listeners.AddListener(listener, holdRef, supportMessageInheritance);
 
             return this;
         }
 
         public IEventSubscriptionManager AddListener<T>(IListener<T> listener, bool? holdStrongReference)
         {
-            AddListener((object)listener, holdStrongReference);
+            AddListener((object) listener, holdStrongReference);
 
             return this;
         }
@@ -208,7 +216,7 @@ namespace EventAggregatorNet
         /// threadsafe manipulation to the collection, and convenience 
         /// methods to configure the collection
         /// </summary>
-        class ListenerWrapperCollection : IEnumerable<ListenerWrapper>
+        private class ListenerWrapperCollection : IEnumerable<ListenerWrapper>
         {
             private readonly List<ListenerWrapper> _listeners = new List<ListenerWrapper>();
             private readonly object _sync = new object();
@@ -252,7 +260,7 @@ namespace EventAggregatorNet
                 return listenerWrapper != null;
             }
 
-            public void AddListener(object listener, bool holdStrongReference)
+            public void AddListener(object listener, bool holdStrongReference, bool supportMessageInheritance)
             {
                 lock (_sync)
                 {
@@ -260,8 +268,9 @@ namespace EventAggregatorNet
                     if (ContainsListener(listener))
                         return;
 
-                    var listenerWrapper = new ListenerWrapper(listener, RemoveListenerWrapper, holdStrongReference);
-
+                    var listenerWrapper = new ListenerWrapper(listener, RemoveListenerWrapper, holdStrongReference, supportMessageInheritance);
+                    if (listenerWrapper.Count == 0)
+                        throw new ArgumentException("IListener<T> is not implemented", "listener");
                     _listeners.Add(listenerWrapper);
                 }
             }
@@ -303,24 +312,145 @@ namespace EventAggregatorNet
                 get { return _target; }
             }
         }
+
         #endregion
 
-        class ListenerWrapper
+        private class ListenerWrapper
         {
             private const string HandleMethodName = "Handle";
-            private readonly Dictionary<Type, MethodInfo> _supportedListeners = new Dictionary<Type, MethodInfo>();
             private readonly Action<ListenerWrapper> _onRemoveCallback;
+            private readonly List<HandleMethodWrapper> _handlers = new List<HandleMethodWrapper>(); 
             private readonly IReference _reference;
 
-            private static IEnumerable<Type> GetBaseInterfaceType(Type type)
+            public ListenerWrapper(object listener, Action<ListenerWrapper> onRemoveCallback, bool holdReferences, bool supportMessageInheritance)
+            {
+                _onRemoveCallback = onRemoveCallback;
+
+                if (holdReferences)
+                    _reference = new StrongReferenceImpl(listener);
+                else
+                    _reference = new WeakReferenceImpl(listener);
+
+                var listenerInterfaces = TypeHelper.GetBaseInterfaceType(listener.GetType())
+                                                   .Where(w => TypeHelper.DirectlyClosesGeneric(w, typeof (IListener<>)));
+
+                foreach (var listenerInterface in listenerInterfaces)
+                {
+                    var messageType = TypeHelper.GetFirstGenericType(listenerInterface);
+                    var handleMethod = TypeHelper.GetMethod(listenerInterface, HandleMethodName);
+
+                    HandleMethodWrapper handler = new HandleMethodWrapper(handleMethod, listenerInterface, messageType,supportMessageInheritance );
+                    _handlers.Add(handler);
+                }
+            }
+
+            public object ListenerInstance
+            {
+                get { return _reference.Target; }
+            }
+
+            public bool Handles<TListener>() where TListener : class
+            {
+                return _handlers.Aggregate(false, (current, handler) => current | handler.Handles<TListener>());
+            }
+
+            public bool HandlesMessage(object message)
+            {
+                return message != null && _handlers.Aggregate(false, (current, handler) => current | handler.HandlesMessage(message));
+            }
+
+            public void TryHandle<TListener>(object message, out bool wasHandled)
+                where TListener : class
+            {
+                var target = _reference.Target;
+                wasHandled = false;
+                if (target == null)
+                {
+                    _onRemoveCallback(this);
+                    return;
+                }
+
+                foreach (var handler in _handlers)
+                {
+                    bool thisOneHandled = false;
+                    handler.TryHandle<TListener>(target, message, out thisOneHandled);
+                    wasHandled |= thisOneHandled;
+                }
+            }
+
+            public int Count
+            {
+                get { return _handlers.Count; }
+            }
+        }
+
+        private class HandleMethodWrapper
+        {
+            private readonly Type _listenerInterface;
+            private readonly Type _messageType;
+            private readonly MethodInfo _handlerMethod;
+            private readonly bool _supportMessageInheritance;
+            private readonly Dictionary<Type, bool> supportedMessageTypes = new Dictionary<Type, bool>(); 
+
+            public HandleMethodWrapper(MethodInfo handlerMethod, Type listenerInterface, Type messageType, bool supportMessageInheritance)
+            {
+                _handlerMethod = handlerMethod;
+                _listenerInterface = listenerInterface;
+                _messageType = messageType;
+                _supportMessageInheritance = supportMessageInheritance;
+                supportedMessageTypes[messageType] = true;
+            }
+
+            public bool Handles<TListener>() where TListener : class
+            {
+                return _listenerInterface == typeof (TListener);
+            }
+
+            public bool HandlesMessage(object message)
+            {
+                if (message == null)
+                {
+                    return false;
+                }
+
+                bool handled;
+                Type messageType = message.GetType();
+                bool previousMessageType = supportedMessageTypes.TryGetValue(messageType, out handled);
+                if (!previousMessageType && _supportMessageInheritance)
+                {
+                    handled = TypeHelper.IsAssignableFrom(_messageType, messageType);
+                    supportedMessageTypes[messageType] = handled;
+                }
+                return handled;
+            }
+
+            public void TryHandle<TListener>(object target, object message, out bool wasHandled)
+                where TListener : class
+            {
+                wasHandled = false;
+                if (target == null)
+                {
+                    return;
+                }
+
+                if (!Handles<TListener>() && !HandlesMessage(message)) return;
+
+                _handlerMethod.Invoke(target, new[] {message});
+                wasHandled = true;
+            }
+        }
+
+        internal static class TypeHelper
+        {
+            internal static IEnumerable<Type> GetBaseInterfaceType(Type type)
             {
                 if (type == null)
                     return new Type[0];
 
 #if NETFX_CORE
-                List<Type> interfaces = type.GetTypeInfo().ImplementedInterfaces.ToList();
+                var interfaces = type.GetTypeInfo().ImplementedInterfaces.ToList();
 #else
-                List<Type> interfaces = type.GetInterfaces().ToList();
+                var interfaces = type.GetInterfaces().ToList();
 #endif
 
                 foreach (var @interface in interfaces.ToArray())
@@ -340,87 +470,10 @@ namespace EventAggregatorNet
                 return interfaces.Distinct();
             }
 
-            public ListenerWrapper(object listener, Action<ListenerWrapper> onRemoveCallback, bool holdReferences)
-            {
-                _onRemoveCallback = onRemoveCallback;
-
-                if (holdReferences)
-                    _reference = new StrongReferenceImpl(listener);
-                else
-                    _reference = new WeakReferenceImpl(listener);
-
-                var listenerInterfaces = GetBaseInterfaceType(listener.GetType())
-                    .Where(w => DirectlyClosesGeneric(w, typeof(IListener<>)));
-
-                foreach (var listenerInterface in listenerInterfaces)
-                {
-#if NETFX_CORE
-                    var typeInfo = listenerInterface.GetTypeInfo();
-                    var handleMethod = typeInfo.GetDeclaredMethod(HandleMethodName);
-                    var messageType = typeInfo.GenericTypeArguments.First();
-#else
-                    var handleMethod = listenerInterface.GetMethod(HandleMethodName);
-                    var messageType = listenerInterface.GetGenericArguments().First();
-#endif
-                    _supportedListeners.Add(messageType, handleMethod);
-                }
-            }
-
-            public object ListenerInstance { get { return _reference.Target; } }
-
-            public bool Handles<TListener>(object message)
-                where TListener : class
-            {
-#if NETFX_CORE
-                var messageType = typeof(TListener).GetTypeInfo().GenericTypeArguments.First();
-#else
-                var messageType = typeof(TListener).GetGenericArguments().First();
-#endif
-                if (_supportedListeners.ContainsKey(messageType))
-                    return true;
-                if ((message != null) && (_supportedListeners.ContainsKey(message.GetType())))
-                    return true;
-                return false;
-            }
-
-            public void TryHandle<TListener>(object message, out bool wasHandled)
-                where TListener : class
-            {
-                var target = _reference.Target;
-                wasHandled = false;
-                if (target == null)
-                {
-                    _onRemoveCallback(this);
-                    return;
-                }
-
-#if NETFX_CORE
-                var messageType = typeof(TListener).GetTypeInfo().GenericTypeArguments.First();
-#else
-                var messageType = typeof(TListener).GetGenericArguments().First();
-#endif
-                if (!_supportedListeners.ContainsKey(messageType))
-                {
-                    if (message == null)
-                    {
-                        return;
-                    }
-                    messageType = message.GetType();
-                    if (!_supportedListeners.ContainsKey(messageType))
-                    {
-                        return;
-                    }
-                }
-
-                _supportedListeners[messageType].Invoke(target, new[] { message });
-                wasHandled = true;
-            }
-
-            private static bool DirectlyClosesGeneric(Type type, Type openType)
+            internal static bool DirectlyClosesGeneric(Type type, Type openType)
             {
                 if (type == null)
                     return false;
-
 #if NETFX_CORE
                 if (type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == openType)
 #else
@@ -432,12 +485,52 @@ namespace EventAggregatorNet
 
                 return false;
             }
+
+            internal static Type GetFirstGenericType<T>() where T : class
+            {
+                return GetFirstGenericType(typeof (T));
+            }
+
+            internal static Type GetFirstGenericType(Type type)
+            {
+#if NETFX_CORE
+                var messageType = type.GetTypeInfo().GenericTypeArguments.First();
+#else
+                var messageType = type.GetGenericArguments().First();
+#endif
+                return messageType;
+            }
+
+            internal static MethodInfo GetMethod(Type type, string methodName)
+            {
+#if NETFX_CORE
+                var typeInfo = type.GetTypeInfo();
+                var handleMethod = typeInfo.GetDeclaredMethod(methodName);
+#else
+                var handleMethod = type.GetMethod(methodName);
+
+#endif
+                return handleMethod;
+            }
+
+            internal static bool IsAssignableFrom(Type type, Type specifiedType)
+            {
+#if NETFX_CORE
+                return type.GetTypeInfo().IsAssignableFrom(specifiedType.GetTypeInfo());
+#else
+                return type.IsAssignableFrom(specifiedType);
+#endif
+            }
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1034:NestedTypesShouldNotBeVisible")]
         public class Config
         {
-            private Action<object> _onMessageNotPublishedBecauseZeroListeners = msg => { /* TODO: possibly Trace message?*/ };
+            private Action<object> _onMessageNotPublishedBecauseZeroListeners = msg =>
+                {
+                    /* TODO: possibly Trace message?*/
+                };
+
             public Action<object> OnMessageNotPublishedBecauseZeroListeners
             {
                 get { return _onMessageNotPublishedBecauseZeroListeners; }
@@ -445,6 +538,7 @@ namespace EventAggregatorNet
             }
 
             private Action<Action> _defaultThreadMarshaler = action => action();
+
             public Action<Action> DefaultThreadMarshaler
             {
                 get { return _defaultThreadMarshaler; }
@@ -456,7 +550,16 @@ namespace EventAggregatorNet
             /// If false then a WeakReference is used and the garbage collector can remove the listener when not in scope any longer.
             /// </summary>
             public bool HoldReferences { get; set; }
+
+            /// <summary>
+            /// If true then EventAggregator will support registering listeners for base messages. 
+            /// If false then EventAggregator will only match the message type to the listener.
+            /// </summary>
+            public bool SupportMessageInheritance { get; set; }
         }
     }
+
+
 }
+
 // ReSharper enable InconsistentNaming
