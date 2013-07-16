@@ -516,7 +516,7 @@ namespace EventAggregatorNet
             internal static bool IsAssignableFrom(Type type, Type specifiedType)
             {
 #if NETFX_CORE
-                return type.GetTypeInfo().IsAssignableFrom(specifiedType);
+                return type.GetTypeInfo().IsAssignableFrom(specifiedType.GetTypeInfo());
 #else
                 return type.IsAssignableFrom(specifiedType);
 #endif
