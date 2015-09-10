@@ -1,3 +1,7 @@
+# EventAggregator.Net
+
+> By: [@staxmanade](http://staxmanade.com)
+
 What is this?
 --
 It's a single .cs file that can provide a basis for a simple Pub/Sub in memory event aggregator.
